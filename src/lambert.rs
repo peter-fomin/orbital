@@ -42,6 +42,9 @@ pub struct LambertSolver {
 
     // fitting parameter
     x: f64,
+    y: f64,
+
+    converged: bool,
 }
 
 impl LambertSolver {
@@ -86,26 +89,26 @@ impl LambertSolver {
         self.rho = (self.r1 - self.r2) / self.c;
         self.sigma = (1.0 - self.rho.powf(2.0)).sqrt();
 
-        self.find_x().expect("Failed to converge x parameter");
+        self.find_x();
 
         self
     }
 
-    fn y(&self) -> f64 {
-        (1.0 - self.lambda.powf(2.0) * (1.0 - self.x.powf(2.0))).sqrt()
+    fn set_y(&mut self) {
+        self.y = (1.0 - self.lambda.powf(2.0) * (1.0 - self.x.powf(2.0))).sqrt();
     }
 
     fn psi(&self) -> f64 {
         if self.x < 1.0 {
-            (self.x * self.y() + self.lambda * (1.0 - self.x.powf(2.0))).acos()
+            (self.x * self.y + self.lambda * (1.0 - self.x.powf(2.0))).acos()
         } else if self.x > 1.0 {
-            (self.x * self.y() - self.lambda * (self.x.powf(2.0) - 1.0)).acosh()
+            (self.x * self.y - self.lambda * (self.x.powf(2.0) - 1.0)).acosh()
         } else {
             0.0
         }
     }
 
-    fn find_x(&mut self) -> Result<(), &str> {
+    fn find_x(&mut self) {
         assert!(self.lambda.abs() < 1.0);
         assert!(self.t_nd / PI < 1.0);
 
@@ -124,36 +127,31 @@ impl LambertSolver {
         } else {
             (t_0 / self.t_nd).powf((t_1 / t_0).log2()) - 1.0
         };
+        self.set_y();
 
         // compute x using householder method
 
         let mut delta_x: f64 = 2.0 * tol;
         let mut iterations = 10;
         while delta_x.abs() > tol && iterations > 0 {
-            let y = self.y();
-            let t = 1.0 / (1.0 - self.x.powf(2.0)) * (self.psi() / (1.0 - self.x.powf(2.0)).abs().sqrt() - self.x + self.lambda * y);
+            let t = 1.0 / (1.0 - self.x.powf(2.0)) * (self.psi() / (1.0 - self.x.powf(2.0)).abs().sqrt() - self.x + self.lambda * self.y);
             let f_n = t - self.t_nd;
-            let f_p = (3.0 * t * self.x - 2.0 + 2.0 * self.lambda.powf(3.0) * self.x / y) / (1.0 - self.x.powf(2.0));
-            let f_pp = (3.0 * t + 5.0 * self.x * f_p + 2.0 * (1.0 - self.lambda.powf(2.0)) * self.lambda.powf(3.0) / y.powf(3.0)) / (1.0 - self.x.powf(2.0));
-            let f_ppp = (7.0 * self.x * f_pp + 8.0 * f_p - 6.0 * (1.0 - self.lambda.powf(2.0)) * self.lambda.powf(5.0) * self.x / y.powf(5.0)) / (1.0 - self.x.powf(2.0));
+            let f_p = (3.0 * t * self.x - 2.0 + 2.0 * self.lambda.powf(3.0) * self.x / self.y) / (1.0 - self.x.powf(2.0));
+            let f_pp = (3.0 * t + 5.0 * self.x * f_p + 2.0 * (1.0 - self.lambda.powf(2.0)) * self.lambda.powf(3.0) / self.y.powf(3.0)) / (1.0 - self.x.powf(2.0));
+            let f_ppp = (7.0 * self.x * f_pp + 8.0 * f_p - 6.0 * (1.0 - self.lambda.powf(2.0)) * self.lambda.powf(5.0) * self.x / self.y.powf(5.0)) / (1.0 - self.x.powf(2.0));
             delta_x = f_n * (f_p.powf(2.0) - f_n * f_pp / 2.0) / (f_p * (f_p.powf(2.0) - f_n * f_pp) + f_ppp * f_n.powf(2.0) / 6.0);
             self.x -= delta_x;
+            self.set_y();
             iterations -= 1;
         }
-        if iterations > 0 {
-            Ok(())
-        } else {
-            Err("Householder did not converge")
-        }
+        self.converged = iterations > 0;
     }
 
     pub fn calculate_speed(&self) -> (Vector3D, Vector3D) {
-
-        let y = self.y();
-        let v_r1 = self.gamma * (self.lambda * y - self.x - self.rho * (self.lambda * y + self.x)) / self.r1;
-        let v_r2 = -self.gamma * (self.lambda * y - self.x + self.rho * (self.lambda * y + self.x)) / self.r2;
-        let v_t1 = self.gamma * self.sigma * (y + self.lambda * self.x) / self.r1;
-        let v_t2 = self.gamma * self.sigma * (y + self.lambda * self.x) / self.r2;
+        let v_r1 = self.gamma * (self.lambda * self.y - self.x - self.rho * (self.lambda * self.y + self.x)) / self.r1;
+        let v_r2 = -self.gamma * (self.lambda * self.y - self.x + self.rho * (self.lambda * self.y + self.x)) / self.r2;
+        let v_t1 = self.gamma * self.sigma * (self.y + self.lambda * self.x) / self.r1;
+        let v_t2 = self.gamma * self.sigma * (self.y + self.lambda * self.x) / self.r2;
 
         let v1 = v_r1 * self.i_r1 + v_t1 * self.i_t1;
         let v2 = v_r2 * self.i_r2 + v_t2 * self.i_t2;
