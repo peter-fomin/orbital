@@ -163,28 +163,14 @@ impl LambertSolver {
 
     pub fn get_orbit(&self) -> Orbit {
         let (_, v2) = self.get_velocity();
-        let h_v = self.r2_v.cross(v2);
-        let ecc_v = v2.cross(h_v) / self.mu - self.i_r2;
-        let n_v = Vector3D::new(-h_v.y, h_v.x, 0.0);
-        Orbit {
-            e: ecc_v.mag(),
-            a: self.s / 2.0 / (1.0 - self.x.powf(2.0)),
-            i: h_v.z / h_v.mag(),
-            lan: if n_v.y >= 0.0 {
-                (n_v.x / n_v.mag()).acos()
-            } else {
-                2.0 * PI - (n_v.x / n_v.mag()).acos()
-            },
-            argp: (ecc_v * n_v / n_v.mag() / ecc_v.mag()).acos(),
-            nu: (ecc_v * self.r2_v / self.r2_v.mag() / ecc_v.mag()).acos(),
-        }
+        Orbit::from_rv(self.r2_v, v2, self.mu)
     }
 }
 
 #[cfg(test)]
   
 #[test]
-fn test_speeds() {
+fn test_velocity() {
     let mu = 3.986004e5;
     let r1 = Vector3D {
         x: 5000.0,
@@ -202,4 +188,28 @@ fn test_speeds() {
     let v2_ans = Vector3D { x: -3.31245867404885, y: -4.196618846980379, z: -0.3852889233316633 };
     assert!((v1 - v1_ans).mag() < 0.001);
     assert!((v2 - v2_ans).mag() < 0.001);
+}
+
+#[test]
+fn test_orbit() {
+    let mu = 3.986004e5;
+    let r1 = Vector3D {
+        x: 5000.0,
+        y: 10000.0,
+        z: 2100.0
+    };
+    let r2 = Vector3D {
+        x: -14600.0,
+        y: 2500.0,
+        z: 7000.0
+    };
+    let ls = LambertSolver::new(r1, r2, 3600.0, mu);
+    let orbit = ls.get_orbit();
+    let orbit_ans = Orbit { ecc: 0.43348753093376213, a: 20002.887624230483, inc: 0.8643534138360562, lan: 0.7784202841672526, argp: 0.5359234295374832, nu: 1.5903847969354517 };
+    assert!((orbit.ecc - orbit_ans.ecc).abs() < 0.001);
+    assert!((orbit.a - orbit_ans.a).abs() < 0.001);
+    assert!((orbit.inc - orbit_ans.inc).abs() < 0.001);
+    assert!((orbit.lan - orbit_ans.lan).abs() < 0.001);
+    assert!((orbit.argp - orbit_ans.argp).abs() < 0.001);
+    assert!((orbit.nu - orbit_ans.nu).abs() < 0.001);
 }
