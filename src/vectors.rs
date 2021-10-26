@@ -69,6 +69,14 @@ impl Mul<f64> for Vector3D {
         }
     }
 }
+
+impl Mul for Vector3D {
+    type Output = f64;
+
+    fn mul(self, rhs: Self) -> f64 {
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
+}
     
 impl Div<f64> for Vector3D {
     // Divide Vector by Scalar

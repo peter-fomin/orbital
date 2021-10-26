@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 
 use super::vectors::Vector3D;
+use super::orbit::Orbit;
 
 #[derive(Default)]
 pub struct LambertSolver {
@@ -56,6 +57,7 @@ impl LambertSolver {
             r2_v: r2,
             t: t,
             mu: mu,
+            converged: false,
             ..Default::default()
         };
         new.calculate_params()
@@ -147,7 +149,7 @@ impl LambertSolver {
         self.converged = iterations > 0;
     }
 
-    pub fn calculate_speed(&self) -> (Vector3D, Vector3D) {
+    pub fn get_velocity(&self) -> (Vector3D, Vector3D) {
         let v_r1 = self.gamma * (self.lambda * self.y - self.x - self.rho * (self.lambda * self.y + self.x)) / self.r1;
         let v_r2 = -self.gamma * (self.lambda * self.y - self.x + self.rho * (self.lambda * self.y + self.x)) / self.r2;
         let v_t1 = self.gamma * self.sigma * (self.y + self.lambda * self.x) / self.r1;
@@ -157,6 +159,25 @@ impl LambertSolver {
         let v2 = v_r2 * self.i_r2 + v_t2 * self.i_t2;
 
         (v1, v2)
+    }
+
+    pub fn get_orbit(&self) -> Orbit {
+        let (_, v2) = self.get_velocity();
+        let h_v = self.r2_v.cross(v2);
+        let ecc_v = v2.cross(h_v) / self.mu - self.i_r2;
+        let n_v = Vector3D::new(-h_v.y, h_v.x, 0.0);
+        Orbit {
+            e: ecc_v.mag(),
+            a: self.s / 2.0 / (1.0 - self.x.powf(2.0)),
+            i: h_v.z / h_v.mag(),
+            lan: if n_v.y >= 0.0 {
+                (n_v.x / n_v.mag()).acos()
+            } else {
+                2.0 * PI - (n_v.x / n_v.mag()).acos()
+            },
+            argp: (ecc_v * n_v / n_v.mag() / ecc_v.mag()).acos(),
+            nu: (ecc_v * self.r2_v / self.r2_v.mag() / ecc_v.mag()).acos(),
+        }
     }
 }
 
@@ -176,7 +197,7 @@ fn test_speeds() {
         z: 7000.0
     };
     let ls = LambertSolver::new(r1, r2, 3600.0, mu);
-    let (v1, v2) = ls.calculate_speed();
+    let (v1, v2) = ls.get_velocity();
     let v1_ans = Vector3D { x: -5.992494984068112, y: 1.925366402070909, z: 3.2456379064882404 };
     let v2_ans = Vector3D { x: -3.31245867404885, y: -4.196618846980379, z: -0.3852889233316633 };
     assert!((v1 - v1_ans).mag() < 0.001);

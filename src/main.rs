@@ -14,8 +14,10 @@ fn main() {
         z: 7000.0
     };
     let ls = LambertSolver::new(r1, r2, 3600.0, mu);
-    let (v1, v2) = ls.calculate_speed();
+    let (v1, v2) = ls.get_velocity();
+    let orbit = ls.get_orbit();
     println!("{:?}", v1);
     println!("{:?}", v2);
+    println!("{:?}", orbit);
 
 }
