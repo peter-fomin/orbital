@@ -1,11 +1,11 @@
 use std::f64::consts::PI;
 
-use druid::{Data};
+use druid::{Data, Lens};
 
 use super::vectors::Vector3D;
 use super::orbit::Orbit;
 
-#[derive(Default, Data, Clone)]
+#[derive(Default, Data, Clone, Lens)]
 pub struct LambertSolver {
     // first radius-vector
     r1_v: Vector3D,

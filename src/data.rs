@@ -1,11 +1,18 @@
-use druid::Data;
+use druid::{
+    Data,
+    Lens,
+    text::{
+        Selection,
+        format::{Formatter, Validation, ValidationError},
+        }
+};
 
 use super::lambert::LambertSolver;
 use super::vectors::Vector3D;
 
-#[derive(Clone, Data)]
+#[derive(Clone, Data, Lens)]
 pub struct AppState {
-    lambert_problem: LambertSolver,
+    pub lambert_problem: LambertSolver,
 }
 
 impl AppState {
@@ -37,8 +44,25 @@ pub struct VectorItem {
 impl VectorItem {
     pub fn new(name: &str) -> Self {
         Self {
-            name: name.to_owned(),
+            name: name.to_string(),
             ..Default::default()
         }
+    }
+}
+
+
+pub struct FloatFormatter;
+
+impl Formatter<f64> for FloatFormatter {
+    fn format(&self, value: &f64) -> String {
+        format!("{}", value)
+    }
+
+    fn validate_partial_input(&self, _input: &str, _sel: &Selection) -> Validation {
+        Validation::success()
+    }
+
+    fn value(&self, input: &str) -> Result<f64, ValidationError> {
+        input.parse().map_err(ValidationError::new)
     }
 }

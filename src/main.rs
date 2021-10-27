@@ -7,7 +7,7 @@ fn main() {
     let main_window = WindowDesc::new(build_ui)
         .title("Lambert solver");
     
-    let initial_state = AppState::test();
+    let initial_state = AppState::test().lambert_problem;
 
     AppLauncher::with_window(main_window)
         .launch(initial_state)
