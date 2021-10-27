@@ -7,8 +7,8 @@ use druid::{
         }
 };
 
-use super::lambert::LambertSolver;
-use super::vectors::Vector3D;
+use crate::LambertSolver;
+use crate::Vector3D;
 
 #[derive(Clone, Data, Lens)]
 pub struct AppState {

@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use super::vectors::Vector3D;
+use crate::Vector3D;
 
 #[derive(Default, Debug)]
 pub struct Orbit {

@@ -5,8 +5,5 @@ pub mod data;
 pub mod view;
 
 pub use vectors::Vector3D;
-
-pub struct Orbitable {
-    pub mass: f64,
-    pub radius: f64,
-}
+pub use lambert::LambertSolver;
+pub use orbit::Orbit;

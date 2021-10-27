@@ -2,8 +2,8 @@ use std::f64::consts::PI;
 
 use druid::{Data, Lens};
 
-use super::vectors::Vector3D;
-use super::orbit::Orbit;
+use crate::Vector3D;
+use crate::Orbit;
 
 #[derive(Default, Data, Clone, Lens)]
 pub struct LambertSolver {
@@ -163,7 +163,6 @@ impl LambertSolver {
 
     pub fn recalculate_solution(&mut self) {
         self.calculate_params();
-        self.converged = false;
     }
 
     pub fn get_v1(&self) -> Vector3D {
