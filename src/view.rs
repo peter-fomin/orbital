@@ -1,6 +1,6 @@
 use druid::{
-    widget::{Label, TextBox, Flex},
-    Widget, WidgetExt, Lens, LensExt,
+    widget::{Label, TextBox, Flex, Button},
+    Widget, WidgetExt, Lens, LensExt, Env,
 };
 
 use super::data::{FloatFormatter};
@@ -8,12 +8,26 @@ use super::lambert::LambertSolver;
 use super::vectors::Vector3D;
 
 pub fn build_ui() -> impl Widget<LambertSolver> {
+    let solve_button = Button::new("Solve")
+    .on_click(|_ctx, ls: &mut LambertSolver, _env| ls.recalculate_solution());
+    
+
     Flex::column()
-        .cross_axis_alignment(druid::widget::CrossAxisAlignment::End)
-        .with_child(r_input_scope("r1 (km)", &LambertSolver::r1_v))
-        .with_child(r_input_scope("r2 (km)", &LambertSolver::r2_v))
-        .with_child(float_value_input_scope("tof (s)", LambertSolver::t))
-        .with_child(float_value_input_scope("mu (km^3 / s)", LambertSolver::mu))
+        .with_child(
+            Flex::column()
+                .cross_axis_alignment(druid::widget::CrossAxisAlignment::End)
+                .with_child(r_input_scope("r1 (km)", &LambertSolver::r1_v))
+                .with_default_spacer()
+                .with_child(r_input_scope("r2 (km)", &LambertSolver::r2_v))
+                .with_default_spacer()
+                .with_child(float_value_input_scope("time-of-flight (s)", LambertSolver::t))
+                .with_default_spacer()
+                .with_child(float_value_input_scope("gravitational parameter (km^3 / s)", LambertSolver::mu))
+        )
+        .with_default_spacer()
+        .with_child(solve_button)
+        .with_default_spacer()
+        .with_child(converged_label())
         .center()
 }
 
@@ -37,7 +51,6 @@ fn float_value_input_scope<L: Lens<LambertSolver, f64>>(name: &str, lens: L) -> 
         .with_formatter(FloatFormatter)
         .validate_while_editing(false);
     
-    print_type_of(&LambertSolver::mu);
     Flex::row()
         .cross_axis_alignment(druid::widget::CrossAxisAlignment::Baseline)
         .with_child(label)
@@ -46,6 +59,7 @@ fn float_value_input_scope<L: Lens<LambertSolver, f64>>(name: &str, lens: L) -> 
     
 }
 
-fn print_type_of<T>(_: &T) {
-    println!("{}", std::any::type_name::<T>())
+fn converged_label() -> impl Widget<LambertSolver> {
+    let converged_label = Label::new(|ls: &LambertSolver, _env: &Env| format!("Problem solved: {}", ls.is_solved()));
+    converged_label
 }
