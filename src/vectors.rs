@@ -1,7 +1,10 @@
 // Basic 3D Vector functions
 use std::ops::{Add, Sub, Neg, Mul, Div};
+use std::fmt;
 
-#[derive(Default, Debug, Copy, Clone, PartialEq)]
+use druid::{Data, Lens};
+
+#[derive(Default, Debug, Copy, Clone, PartialEq, Data, Lens)]
 pub struct Vector3D {
     pub x: f64,
     pub y: f64,
@@ -88,6 +91,12 @@ impl Div<f64> for Vector3D {
             y: self.y / rhs,
             z: self.z / rhs,
         }
+    }
+}
+
+impl fmt::Display for Vector3D {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "x: {:.4}, y: {:.4}, z: {:.4}", self.x, self.y, self.z)
     }
 }
 
