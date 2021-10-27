@@ -1,7 +1,9 @@
 // Basic 3D Vector functions
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
-#[derive(Default, Debug, Copy, Clone, PartialEq)]
+use druid::{Data};
+
+#[derive(Default, Debug, Copy, Clone, PartialEq, Data)]
 pub struct Vector3D {
     pub x: f64,
     pub y: f64,
