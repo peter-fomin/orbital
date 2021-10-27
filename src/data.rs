@@ -1,10 +1,9 @@
 use druid::{
-    Data,
-    Lens,
     text::{
-        Selection,
         format::{Formatter, Validation, ValidationError},
-        }
+        Selection,
+    },
+    Data, Lens,
 };
 
 use crate::LambertSolver;
@@ -21,12 +20,12 @@ impl AppState {
         let r1 = Vector3D {
             x: 5000.0,
             y: 10000.0,
-            z: 2100.0
+            z: 2100.0,
         };
         let r2 = Vector3D {
             x: -14600.0,
             y: 2500.0,
-            z: 7000.0
+            z: 7000.0,
         };
         let ls = LambertSolver::new(r1, r2, 3600.0, mu).unwrap();
         Self {
@@ -39,12 +38,12 @@ impl AppState {
         let r1 = Vector3D {
             x: 6500.0,
             y: 0.0,
-            z: 0.0
+            z: 0.0,
         };
         let r2 = Vector3D {
             x: 0.0,
             y: 6500.0,
-            z: 0.0
+            z: 0.0,
         };
         let ls = LambertSolver::new(r1, r2, 3688.0, mu).unwrap();
         Self {
@@ -67,7 +66,6 @@ impl VectorItem {
         }
     }
 }
-
 
 pub struct FloatFormatter;
 

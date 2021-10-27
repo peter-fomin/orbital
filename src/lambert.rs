@@ -2,8 +2,8 @@ use std::f64::consts::PI;
 
 use druid::{Data, Lens};
 
-use crate::Vector3D;
 use crate::Orbit;
+use crate::Vector3D;
 
 #[derive(Debug, Clone, Data, PartialEq)]
 pub enum LambertSolverStatus {
@@ -17,7 +17,9 @@ pub enum LambertSolverStatus {
 }
 
 impl Default for LambertSolverStatus {
-    fn default() -> Self {Self::Initialized}
+    fn default() -> Self {
+        Self::Initialized
+    }
 }
 
 #[derive(Default, Data, Clone, Lens)]
@@ -44,7 +46,7 @@ pub struct LambertSolver {
 
     // half of perimeter
     s: f64,
-    
+
     lambda: f64,
     i_h: Vector3D,
 
@@ -62,7 +64,6 @@ pub struct LambertSolver {
     pub status: LambertSolverStatus,
     v1: Vector3D,
     v2: Vector3D,
-
 }
 
 impl LambertSolver {
@@ -85,10 +86,10 @@ impl LambertSolver {
 
     fn calculate_params(&mut self) -> Result<(), LambertSolverStatus> {
         if self.mu <= 0.0 || self.t <= 0.0 {
-            return Err(LambertSolverStatus::InvalidInput)
+            return Err(LambertSolverStatus::InvalidInput);
         }
         if self.r1_v.cross(self.r2_v).mag() == 0.0 {
-            return Err(LambertSolverStatus::CollinearVectors)
+            return Err(LambertSolverStatus::CollinearVectors);
         }
         self.r1 = self.r1_v.mag();
         self.i_r1 = self.r1_v.norm();
@@ -100,7 +101,6 @@ impl LambertSolver {
 
         self.s = 0.5 * (self.r1 + self.r2 + self.c);
 
-
         self.lambda = (1.0 - self.c / self.s).sqrt();
         self.i_h = self.i_r1.cross(self.i_r2).norm();
         if self.i_h.z < 0.0 {
@@ -109,7 +109,6 @@ impl LambertSolver {
         }
         self.i_t1 = self.i_h.cross(self.i_r1).norm();
         self.i_t2 = self.i_h.cross(self.i_r2).norm();
-
 
         self.t_nd = (2.0 * self.mu / self.s.powf(3.0)).sqrt() * self.t;
 
@@ -135,10 +134,10 @@ impl LambertSolver {
 
     fn find_x(&mut self) -> Result<(), LambertSolverStatus> {
         if self.lambda.abs() >= 1.0 {
-            return Err(LambertSolverStatus::InternalError)
+            return Err(LambertSolverStatus::InternalError);
         }
         if self.t_nd / PI >= 1.0 {
-            return Err(LambertSolverStatus::MultiRevolution)
+            return Err(LambertSolverStatus::MultiRevolution);
         }
 
         let tol = 1e-08;
@@ -163,12 +162,22 @@ impl LambertSolver {
         let mut delta_x: f64 = 2.0 * tol;
         let mut iterations = 10;
         while delta_x.abs() > tol && iterations > 0 {
-            let t = 1.0 / (1.0 - self.x.powf(2.0)) * (self.psi() / (1.0 - self.x.powf(2.0)).abs().sqrt() - self.x + self.lambda * self.y);
+            let t = 1.0 / (1.0 - self.x.powf(2.0))
+                * (self.psi() / (1.0 - self.x.powf(2.0)).abs().sqrt() - self.x
+                    + self.lambda * self.y);
             let f_n = t - self.t_nd;
-            let f_p = (3.0 * t * self.x - 2.0 + 2.0 * self.lambda.powf(3.0) * self.x / self.y) / (1.0 - self.x.powf(2.0));
-            let f_pp = (3.0 * t + 5.0 * self.x * f_p + 2.0 * (1.0 - self.lambda.powf(2.0)) * self.lambda.powf(3.0) / self.y.powf(3.0)) / (1.0 - self.x.powf(2.0));
-            let f_ppp = (7.0 * self.x * f_pp + 8.0 * f_p - 6.0 * (1.0 - self.lambda.powf(2.0)) * self.lambda.powf(5.0) * self.x / self.y.powf(5.0)) / (1.0 - self.x.powf(2.0));
-            delta_x = f_n * (f_p.powf(2.0) - f_n * f_pp / 2.0) / (f_p * (f_p.powf(2.0) - f_n * f_pp) + f_ppp * f_n.powf(2.0) / 6.0);
+            let f_p = (3.0 * t * self.x - 2.0 + 2.0 * self.lambda.powf(3.0) * self.x / self.y)
+                / (1.0 - self.x.powf(2.0));
+            let f_pp = (3.0 * t
+                + 5.0 * self.x * f_p
+                + 2.0 * (1.0 - self.lambda.powf(2.0)) * self.lambda.powf(3.0) / self.y.powf(3.0))
+                / (1.0 - self.x.powf(2.0));
+            let f_ppp = (7.0 * self.x * f_pp + 8.0 * f_p
+                - 6.0 * (1.0 - self.lambda.powf(2.0)) * self.lambda.powf(5.0) * self.x
+                    / self.y.powf(5.0))
+                / (1.0 - self.x.powf(2.0));
+            delta_x = f_n * (f_p.powf(2.0) - f_n * f_pp / 2.0)
+                / (f_p * (f_p.powf(2.0) - f_n * f_pp) + f_ppp * f_n.powf(2.0) / 6.0);
             self.x -= delta_x;
             self.set_y();
             iterations -= 1;
@@ -186,8 +195,10 @@ impl LambertSolver {
         let rho = (self.r1 - self.r2) / self.c;
         let sigma = (1.0 - rho.powf(2.0)).sqrt();
 
-        let v_r1 = gamma * (self.lambda * self.y - self.x - rho * (self.lambda * self.y + self.x)) / self.r1;
-        let v_r2 = -gamma * (self.lambda * self.y - self.x + rho * (self.lambda * self.y + self.x)) / self.r2;
+        let v_r1 = gamma * (self.lambda * self.y - self.x - rho * (self.lambda * self.y + self.x))
+            / self.r1;
+        let v_r2 = -gamma * (self.lambda * self.y - self.x + rho * (self.lambda * self.y + self.x))
+            / self.r2;
         let v_t1 = gamma * sigma * (self.y + self.lambda * self.x) / self.r1;
         let v_t2 = gamma * sigma * (self.y + self.lambda * self.x) / self.r2;
 
@@ -217,25 +228,32 @@ impl LambertSolver {
 }
 
 #[cfg(test)]
-  
 #[test]
 fn test_velocity() {
     let mu = 3.986004e5;
     let r1 = Vector3D {
         x: 5000.0,
         y: 10000.0,
-        z: 2100.0
+        z: 2100.0,
     };
     let r2 = Vector3D {
         x: -14600.0,
         y: 2500.0,
-        z: 7000.0
+        z: 7000.0,
     };
     let ls = LambertSolver::new(r1, r2, 3600.0, mu).unwrap();
     let v1 = ls.get_v1();
     let v2 = ls.get_v2();
-    let v1_ans = Vector3D { x: -5.992494984068112, y: 1.925366402070909, z: 3.2456379064882404 };
-    let v2_ans = Vector3D { x: -3.31245867404885, y: -4.196618846980379, z: -0.3852889233316633 };
+    let v1_ans = Vector3D {
+        x: -5.992494984068112,
+        y: 1.925366402070909,
+        z: 3.2456379064882404,
+    };
+    let v2_ans = Vector3D {
+        x: -3.31245867404885,
+        y: -4.196618846980379,
+        z: -0.3852889233316633,
+    };
     assert!((v1 - v1_ans).mag() < 0.001);
     assert!((v2 - v2_ans).mag() < 0.001);
 }
@@ -246,16 +264,23 @@ fn test_orbit() {
     let r1 = Vector3D {
         x: 5000.0,
         y: 10000.0,
-        z: 2100.0
+        z: 2100.0,
     };
     let r2 = Vector3D {
         x: -14600.0,
         y: 2500.0,
-        z: 7000.0
+        z: 7000.0,
     };
     let ls = LambertSolver::new(r1, r2, 3600.0, mu).unwrap();
     let orbit = ls.get_orbit();
-    let orbit_ans = Orbit { ecc: 0.43348753093376213, a: 20002.887624230483, inc: 0.8643534138360562, lan: 0.7784202841672526, argp: 0.5359234295374832, nu: 1.5903847969354517 };
+    let orbit_ans = Orbit {
+        ecc: 0.43348753093376213,
+        a: 20002.887624230483,
+        inc: 0.8643534138360562,
+        lan: 0.7784202841672526,
+        argp: 0.5359234295374832,
+        nu: 1.5903847969354517,
+    };
     assert!((orbit.ecc - orbit_ans.ecc).abs() < 0.001);
     assert!((orbit.a - orbit_ans.a).abs() < 0.001);
     assert!((orbit.inc - orbit_ans.inc).abs() < 0.001);

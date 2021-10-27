@@ -1,6 +1,6 @@
 // Basic 3D Vector functions
-use std::ops::{Add, Sub, Neg, Mul, Div};
 use std::fmt;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use druid::{Data, Lens};
 
@@ -13,7 +13,7 @@ pub struct Vector3D {
 
 impl Add for Vector3D {
     type Output = Self;
-    
+
     fn add(self, rhs: Self) -> Self {
         Self {
             x: self.x + rhs.x,
@@ -25,7 +25,7 @@ impl Add for Vector3D {
 
 impl Sub for Vector3D {
     type Output = Self;
-    
+
     fn sub(self, rhs: Self) -> Self {
         Self {
             x: self.x - rhs.x,
@@ -63,7 +63,7 @@ impl Mul<Vector3D> for f64 {
 impl Mul<f64> for Vector3D {
     // Vector - Scalar product
     type Output = Self;
-    
+
     fn mul(self, rhs: f64) -> Self {
         Self {
             x: self.x * rhs,
@@ -80,11 +80,11 @@ impl Mul for Vector3D {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 }
-    
+
 impl Div<f64> for Vector3D {
     // Divide Vector by Scalar
     type Output = Self;
-    
+
     fn div(self, rhs: f64) -> Self {
         Self {
             x: self.x / rhs,
@@ -103,11 +103,7 @@ impl fmt::Display for Vector3D {
 impl Vector3D {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         // Standart constructor
-        Self {
-            x,
-            y,
-            z,
-        }
+        Self { x, y, z }
     }
 
     pub fn mag(&self) -> f64 {
@@ -122,7 +118,7 @@ impl Vector3D {
 
     pub fn cross(self, rhs: Vector3D) -> Vector3D {
         // Vector cross product
-        Self{
+        Self {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
             z: self.x * rhs.y - self.y * rhs.x,
@@ -130,9 +126,7 @@ impl Vector3D {
     }
 }
 
-
 #[cfg(test)]
-  
 #[test]
 fn test_add() {
     assert_eq!(
